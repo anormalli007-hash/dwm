@@ -1,0 +1,101 @@
+Requirement already satisfied: mlxtend in /usr/local/lib/python3.12/dist-packages (0.23.4)
+Requirement already satisfied: scipy>=1.2.1 in /usr/local/lib/python3.12/dist-packages (from mlxtend) (1.16.1)
+Requirement already satisfied: numpy>=1.16.2 in /usr/local/lib/python3.12/dist-packages (from mlxtend) (2.0.2)
+Requirement already satisfied: pandas>=0.24.2 in /usr/local/lib/python3.12/dist-packages (from mlxtend) (2.2.2)
+Requirement already satisfied: scikit-learn>=1.3.1 in /usr/local/lib/python3.12/dist-packages (from mlxtend) (1.6.1)
+Requirement already satisfied: matplotlib>=3.0.0 in /usr/local/lib/python3.12/dist-packages (from mlxtend) (3.10.0)
+Requirement already satisfied: joblib>=0.13.2 in /usr/local/lib/python3.12/dist-packages (from mlxtend) (1.5.2)
+Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (4.59.2)
+Requirement already satisfied: kiwisolver>=1.3.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (25.0)
+Requirement already satisfied: pillow>=8 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (11.3.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (3.2.3)
+Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.12/dist-packages (from matplotlib>=3.0.0->mlxtend) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.12/dist-packages (from pandas>=0.24.2->mlxtend) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.12/dist-packages (from pandas>=0.24.2->mlxtend) (2025.2)
+Requirement already satisfied: threadpoolctl>=3.1.0 in /usr/local/lib/python3.12/dist-packages (from scikit-learn>=1.3.1->mlxtend) (3.6.0)
+Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.12/dist-packages (from python-dateutil>=2.7->matplotlib>=3.0.0->mlxtend) (1.17.0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+import pandas as pd
+import plotly.express as px
+from mlxtend.frequent_patterns import apriori, association_rules
+from mlxtend.preprocessing import TransactionEncoder
+import warnings
+
+# -------------------- Hide Warnings --------------------
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
+# -------------------- Load Dataset --------------------
+data = pd.read_csv("spotify-2023.csv", encoding='ISO-8859-1')
+
+# -------------------- Top 10 Frequently Sold Products --------------------
+print("Top 10 frequently sold products (Tabular Representation)\n")
+top_10_tracks = data['track_name'].value_counts().head(10)
+print(top_10_tracks)
+
+# Plot top 10 songs
+fig = px.bar(
+    x=top_10_tracks.index,
+    y=top_10_tracks.values,
+    labels={"x": "Songs", "y": "Count"},
+    title="Top 10 Frequently Sold Products (Graphical Representation)"
+)
+fig.show()
+
+# -------------------- Release Year Analysis --------------------
+if "released_year" in data.columns:
+    year_counts = data['released_year'].value_counts().sort_index()
+
+    fig1 = px.bar(
+        x=year_counts.index,
+        y=year_counts.values,
+        labels={"x": "Release Year", "y": "Count"},
+        title="Number of Tracks Released Per Year"
+    )
+    fig1.show()
+else:
+    print("\n⚠️ 'released_year' column not found. Skipping year analysis.")
+
+# -------------------- Apriori Algorithm with mlxtend --------------------
+if "released_year" in data.columns:
+    # Prepare transactions (each year = basket of songs)
+    transactions = data.groupby("released_year")['track_name'].apply(list)
+
+    # Convert transactions into one-hot encoded DataFrame
+    te = TransactionEncoder()
+    te_array = te.fit(transactions).transform(transactions)
+    df_transactions = pd.DataFrame(te_array, columns=te.columns_)
+
+    # Apply Apriori
+    freq_items = apriori(df_transactions, min_support=0.003, use_colnames=True)
+
+    # Generate Association Rules
+    rules = association_rules(freq_items, metric="lift", min_threshold=3)
+
+    # Display rules
+    print("\nAssociation Rule Mining Results:\n")
+    for idx, row in rules.iterrows():
+        if len(row['antecedents']) == 1 and len(row['consequents']) == 1:  # Keep only 1->1 rules
+            print("Rule: ", list(row['antecedents'])[0], " -> ", list(row['consequents'])[0])
+            print("Support: ", round(row['support'], 4))
+            print("Confidence: ", round(row['confidence'], 4))
+            print("Lift: ", round(row['lift'], 4))
+            print("_____________________________")
+else:
+    print("\n⚠️ 'released_year' column not found. Skipping Apriori analysis.")
