@@ -1,0 +1,55 @@
+import pandas as pd
+
+# Define column names since the CSV file does not have a header
+col_names = ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'class']
+
+# Load the dataset
+df = pd.read_csv("car_evaluation.csv", header=None, names=col_names)
+
+print("--- Original Data Head ---")
+print(df.head())
+print("-" * 30)
+
+# 1. SLICE: Selects a single dimension.
+# Here, we select only the cars with a 'vhigh' (very high) buying price.
+slice_df = df[df['buying'] == 'vhigh']
+print("\n--- Slice Operation ---")
+print("Cars with 'vhigh' buying price:")
+print(slice_df.head())
+print("-" * 30)
+
+
+# 2. DICE: Selects a sub-cube from multiple dimensions.
+# Here, we select cars where the buying price is 'high' AND the maintenance cost is 'low'.
+dice_df = df[(df['buying'] == 'high') & (df['maint'] == 'low')]
+print("\n--- Dice Operation ---")
+print("Cars with 'high' buying price and 'low' maintenance cost:")
+print(dice_df.head())
+print("-" * 30)
+
+
+# 3. ROLLUP: Aggregates data by moving up in a concept hierarchy.
+# Here, we group by the 'safety' rating and count the number of cars in each category.
+rollup_df = df.groupby('safety').size().reset_index(name='car_count')
+print("\n--- Roll-up Operation ---")
+print("Total number of cars by safety rating:")
+print(rollup_df)
+print("-" * 30)
+
+
+# 4. DRILLDOWN: The reverse of roll-up, revealing more detailed data.
+# Here, we first group by the overall 'class' and then drill down to see the count by 'safety' rating within each class.
+drilldown_df = df.groupby(['class', 'safety']).size().reset_index(name='car_count')
+print("\n--- Drill-down Operation ---")
+print("Car counts broken down by class and then by safety rating:")
+print(drilldown_df)
+print("-" * 30)
+
+
+# 5. PIVOT: Rotates the data axes to provide an alternative perspective.
+# Here, we create a table showing the number of cars for each 'buying' price versus their final 'class'.
+pivot_table = pd.pivot_table(df, index='buying', columns='class', aggfunc='size', fill_value=0)
+print("\n--- Pivot Operation ---")
+print("Pivot table of Buying Price vs. Car Class:")
+print(pivot_table)
+print("-" * 30)
