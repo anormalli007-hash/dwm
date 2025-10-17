@@ -1,0 +1,48 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.cluster import hierarchy
+from scipy.spatial.distance import pdist, squareform
+
+# --- Data ---
+a = np.array([2, 8, 9, 1, 8.5])
+b = np.array([4, 2, 3, 5, 1])
+labels = ['P1', 'P2', 'P3', 'P4', 'P5']
+
+# Build DataFrame
+data = pd.DataFrame({'a': a, 'b': b}, index=labels)
+print("\nInput points:\n", data)
+
+# --- Scatter plot ---
+plt.figure(figsize=(8, 5))
+plt.scatter(data['a'], data['b'])
+for idx, row in data.iterrows():
+    plt.annotate(idx, (row['a'], row['b']), fontsize=12)
+plt.title('Scatter Plot of points')
+plt.xlabel('a')
+plt.ylabel('b')
+plt.show()
+
+# --- Distance matrix ---
+dist_vector = pdist(data[['a', 'b']], metric='euclidean')
+dist_matrix = squareform(dist_vector)
+dist_df = pd.DataFrame(dist_matrix, index=labels, columns=labels)
+np.fill_diagonal(dist_df.values, np.nan)   # hide 0 self-distances
+print("\nPairwise distance matrix:\n", dist_df)
+
+# --- Closest pair ---
+mask = np.triu(np.ones(dist_matrix.shape), k=1).astype(bool)
+masked = np.where(mask, dist_matrix, np.nan)
+min_val = np.nanmin(masked)
+min_pos = np.where(masked == min_val)
+i, j = min_pos[0][0], min_pos[1][0]
+print(f"\nClosest pair: {labels[i]} and {labels[j]} with distance = {min_val:.4f}")
+
+# --- Dendrogram ---
+plt.figure(figsize=(6, 5))
+plt.title("Dendrogram (single linkage)")
+Z = hierarchy.linkage(data[['a', 'b']], method='single', metric='euclidean')
+hierarchy.dendrogram(Z, labels=labels)
+plt.xlabel('Points')
+plt.ylabel('Distance')
+plt.show()
