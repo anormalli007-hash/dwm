@@ -1,0 +1,2 @@
+# Libraries Installation
+pip install pandas seaborn scikit-learn matplotlib numpy scipy mlxtend plotly
