@@ -1,0 +1,44 @@
+import pandas as pd
+
+# Dimension Table: Time [cite: 594]
+time_dim = pd.DataFrame({
+    'time_key': [1, 2, 3],
+    'day': ['Mon', 'Tue', 'Wed'],
+    'month': ['Jan', 'Jan', 'Jan'],
+    'quarter': ['Q1', 'Q1', 'Q1'],
+    'year': [2024, 2024, 2024]
+})
+
+# Dimension Table: Hotel [cite: 622]
+hotel_dim = pd.DataFrame({
+    'hotel_key': [101, 102],
+    'branch_name': ['Grand Hotel', 'City Inn'],
+    'region': ['West', 'East'],
+    'location_key': [10, 20]
+})
+
+# Dimension Table: Room [cite: 601]
+room_dim = pd.DataFrame({
+    'room_key': [1, 2, 3],
+    'room_type': ['Deluxe', 'Suite', 'Standard'],
+    'number_of_beds': [1, 2, 1],
+    'price': [5000, 9000, 3500]
+})
+
+# Fact Table [cite: 615]
+fact_table = pd.DataFrame({
+    'time_key': [1, 1, 2],
+    'hotel_key': [101, 102, 101],
+    'room_key': [1, 3, 2],
+    'occupied_rooms': [30, 50, 15],
+    'revenue': [150000, 175000, 135000]
+})
+
+print("--- Time Dimension Table ---")
+print(time_dim)
+print("\n--- Hotel Dimension Table ---")
+print(hotel_dim)
+print("\n--- Room Dimension Table ---")
+print(room_dim)
+print("\n--- Fact Table ---")
+print(fact_table)
